@@ -212,7 +212,7 @@ void Array::WriteCell(int x, int y, double deltaWeight, double maxWeight, double
 				if (deltaWeightNormalized > 0) {
 					conductanceGp += deltaWeightNormalized * (maxConductance - minConductance)*2;
 					//conductanceGp += deltaWeightNormalized * (maxConductance - minConductance) ;
-					if(conductanceGp> maxConductance){
+					if(conductanceGp > maxConductance){
 						conductanceGp = maxConductance;
 					}
 					static_cast<eNVM*>(cell[x][y])->conductanceGp = conductanceGp;

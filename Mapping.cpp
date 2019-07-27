@@ -77,13 +77,14 @@ void WeightToConductance() {
 			for (int row = 0; row < param->nInput; row++) {
 				arrayIH->EraseCell(col, row, param->maxWeight, param->minWeight); //Erase를 시키면 둘다 minConductance로 감
 			}
+		}
 			/* ReWrite weight to arrayIH */
 			for (int col = 0; col < param->nHide; col++) {
 				for (int row = 0; row < param->nInput; row++) {
-					arrayIH->ReWriteCell(col, row, weight1[col][row], param->maxWeight, param->minWeight);
+					//arrayIH->ReWriteCell(col, row, weight1[col][row], param->maxWeight, param->minWeight);
+					arrayIH->WriteCell(col, row, weight1[col][row]-0.5, param->maxWeight, param->minWeight, false);
 				}
 			}
-		}
 	}
 	else {
 		/* Erase the weight of arrayIH */
@@ -105,13 +106,14 @@ void WeightToConductance() {
 			for (int row = 0; row < param->nHide; row++) {
 				arrayHO->EraseCell(col, row, param->maxWeight, param->minWeight);
 			}
+		}
 			/* ReWrite weight to arrayIH */
 			for (int col = 0; col < param->nOutput; col++) {
 				for (int row = 0; row < param->nHide; row++) {
-					arrayHO->ReWriteCell(col, row, weight2[col][row], param->maxWeight, param->minWeight);
+					//arrayHO->ReWriteCell(col, row, weight2[col][row], param->maxWeight, param->minWeight);
+					arrayHO->WriteCell(col, row, weight2[col][row] - 0.5, param->maxWeight, param->minWeight, false);
 				}
 			}
-		}
 	}
 	else {
 		/* Erase the weight of arrayHO */

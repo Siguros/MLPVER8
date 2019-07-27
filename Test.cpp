@@ -275,6 +275,48 @@ void Validate() {
 			correct++;
 		}
 	}
+	if (param->PrintWeightdist) {
+		int numweight[10];
+		int numweight2[10];
+		std::fill_n(numweight, 10, 0);
+		std::fill_n(numweight2, 10, 0);
+		/* ARRAYIH*/
+		for (int i = 0; i < param->nHide; i++) {
+			for (int j = 0; j < param->nInput; j++) {
+				if (0 <= weight1[i][j] && weight1[i][j] < 0.1) { numweight[0] += 1; }
+				else if (0.1 <= weight1[i][j] && weight1[i][j] < 0.2) { numweight[1] += 1; }
+				else if (0.2 <= weight1[i][j] && weight1[i][j] < 0.3) { numweight[2] += 1; }
+				else if (0.3 <= weight1[i][j] && weight1[i][j] < 0.4) { numweight[3] += 1; }
+				else if (0.4 <= weight1[i][j] && weight1[i][j] < 0.5) { numweight[4] += 1; }
+				else if (0.5 <= weight1[i][j] && weight1[i][j] < 0.6) { numweight[5] += 1; }
+				else if (0.6 <= weight1[i][j] && weight1[i][j] < 0.7) { numweight[6] += 1; }
+				else if (0.7 <= weight1[i][j] && weight1[i][j] < 0.8) { numweight[7] += 1; }
+				else if (0.8 <= weight1[i][j] && weight1[i][j] < 0.9) { numweight[8] += 1; }
+				else if (0.9 <= weight1[i][j] && weight1[i][j] <= 1) { numweight[9] += 1; }
+			}
+		}
+		/* ARRAYHO*/
+		for (int i = 0; i < param->nOutput; i++) {
+			for (int j = 0; j < param->nHide; j++) {
+				if (0 <= weight2[i][j] && weight2[i][j] < 0.1) { numweight2[0] += 1; }
+				else if (0.1 <= weight2[i][j] && weight2[i][j] < 0.2) { numweight2[1] += 1; }
+				else if (0.2 <= weight2[i][j] && weight2[i][j] < 0.3) { numweight2[2] += 1; }
+				else if (0.3 <= weight2[i][j] && weight2[i][j] < 0.4) { numweight2[3] += 1; }
+				else if (0.4 <= weight2[i][j] && weight2[i][j] < 0.5) { numweight2[4] += 1; }
+				else if (0.5 <= weight2[i][j] && weight2[i][j] < 0.6) { numweight2[5] += 1; }
+				else if (0.6 <= weight2[i][j] && weight2[i][j] < 0.7) { numweight2[6] += 1; }
+				else if (0.7 <= weight2[i][j] && weight2[i][j] < 0.8) { numweight2[7] += 1; }
+				else if (0.8 <= weight2[i][j] && weight2[i][j] < 0.9) { numweight2[8] += 1; }
+				else if (0.9 <= weight2[i][j] && weight2[i][j] <= 1) { numweight2[9] += 1; }
+			}
+		}
+		for (int i = 0; i < 10; i++) {
+			std::cout << "weight1" << i << ":" << numweight[i] << std::endl;
+		}
+		for (int i = 0; i < 10; i++) {
+			std::cout << "weight2" << i << ":" << numweight2[i] << std::endl;
+		}
+	}
 	if (!param->useHardwareInTraining) {    // Calculate the classification latency and energy only for offline classification
 		arrayIH->readEnergy += sumArrayReadEnergyIH;
 		subArrayIH->readDynamicEnergy += sumNeuroSimReadEnergyIH;
@@ -283,5 +325,6 @@ void Validate() {
 		subArrayIH->readLatency += sumReadLatencyIH;
 		subArrayHO->readLatency += sumReadLatencyHO;
 	}
+	
 }
 

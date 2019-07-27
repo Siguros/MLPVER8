@@ -45,8 +45,8 @@ Param::Param() {
 	numMnistTestImages = 10000;	// # of testing images in MNIST
 	
 	/* Algorithm parameters */
-	numTrainImagesPerEpoch = 1000;	// # of training images per epoch
-	totalNumEpochs = 20;	// Total number of epochs
+	numTrainImagesPerEpoch = 8000;	// # of training images per epoch
+	totalNumEpochs = 125;	// Total number of epochs
 	interNumEpochs = 1;		// Internal number of epochs (print out the results every interNumEpochs)
 	nInput = 400;     // # of neurons in input layer
 	nHide = 100;      // # of neurons in hidden layer
@@ -78,6 +78,7 @@ Param::Param() {
 	processNode = 14;	// Technology node (nm)
 	clkFreq = 2e9;		// Clock frequency (Hz)
 
-	numImageperRESET = 2;
+	numImageperRESET = 50;
+	PrintWeightdist = true;
 }
 

@@ -82,6 +82,7 @@ public:
 	double clkFreq;		// Clock frequency (Hz)
 
 	int numImageperRESET;
+	bool PrintWeightdist;
 };
 
 #endif
