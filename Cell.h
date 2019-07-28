@@ -185,6 +185,8 @@ public:
 	double NL_LTD;		// LTD nonlinearity
 	double paramALTP;	// Parameter A for LTP nonlinearity
 	double paramBLTP;	// Parameter B for LTP nonlinearity
+	double paramB_Gp;
+	double paramB_Gn;
 	double paramALTD;	// Parameter A for LTD nonlinearity
 	double paramBLTD;	// Parameter B for LTD nonlinearity
 	double sigmaDtoD;	// Sigma of device-to-device variation on weight update nonliearity baseline

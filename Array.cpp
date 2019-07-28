@@ -90,7 +90,7 @@ double Array::ReadCell(int x, int y) {
 					//cellCurrentGn = readVoltage / (1 / static_cast<eNVM*>(cell[x][y])->conductanceGn); //totalWireResistance);
 					//cellCurrentRef = readVoltage / (1 / static_cast<eNVM*>(cell[x][y])->conductanceRef);
 					//cellCurrent = cellCurrentGp-cellCurrentGn+cellCurrentRef;
-					cellCurrent=readVoltage/ (1 / static_cast<eNVM*>(cell[x][y])->conductance + totalWireResistance);
+					cellCurrent = readVoltage / (1 / static_cast<eNVM*>(cell[x][y])->conductance); //+ totalWireResistance);
 				}
 			}
 			return cellCurrent;

@@ -83,7 +83,7 @@ void Validate() {
 	double tempMax;
 	int countNum;
 	correct = 0;
-
+	int countOutn2[10];
 	double sumArrayReadEnergyIH = 0;   // Use a temporary variable here since OpenMP does not support reduction on class member
 	double sumNeuroSimReadEnergyIH = 0;   // Use a temporary variable here since OpenMP does not support reduction on class member
 	double sumReadLatencyIH = 0;    // Use a temporary variable here since OpenMP does not support reduction on class member
@@ -94,6 +94,7 @@ void Validate() {
 	double sumReadLatencyHO = 0;    // Use a temporary variable here since OpenMP does not support reduction on class member
 	double readVoltageHO = static_cast<eNVM*>(arrayHO->cell[0][0])->readVoltage;
 	double readPulseWidthHO = static_cast<eNVM*>(arrayHO->cell[0][0])->readPulseWidth;
+	std::fill_n(countOutn2, 10, 0);
 	#pragma omp parallel for private(outN1, a1, da1, outN2, a2, tempMax, countNum, numBatchReadSynapse) reduction(+: correct, sumArrayReadEnergyIH, sumNeuroSimReadEnergyIH, sumArrayReadEnergyHO, sumNeuroSimReadEnergyHO, sumReadLatencyIH, sumReadLatencyHO)
 	for (int i = 0; i < param->numMnistTestImages; i++)
 	{

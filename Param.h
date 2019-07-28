@@ -83,6 +83,8 @@ public:
 
 	int numImageperRESET;
 	bool PrintWeightdist;
+	double ActDeviceIH;
+	double ActDeviceHO;
 };
 
 #endif

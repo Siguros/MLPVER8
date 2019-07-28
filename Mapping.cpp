@@ -37,6 +37,7 @@
 ********************************************************************************/
 
 #include <cstdio>
+#include <iostream>
 #include <vector>
 #include <random>
 #include "Param.h"
@@ -83,6 +84,7 @@ void WeightToConductance() {
 				for (int row = 0; row < param->nInput; row++) {
 					//arrayIH->ReWriteCell(col, row, weight1[col][row], param->maxWeight, param->minWeight);
 					arrayIH->WriteCell(col, row, weight1[col][row]-0.5, param->maxWeight, param->minWeight, false);
+					//std::cout << arrayIH->ConductanceToWeight(col, row, param->maxWeight, param->minWeight) << std::endl;
 				}
 			}
 	}
