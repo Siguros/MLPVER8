@@ -497,9 +497,9 @@ RealDevice::RealDevice(int x, int y) {
 	maxRESETLEVEL = 10;
 	/* Device-to-device weight update variation */
 	NL_LTP =0;	// LTP nonlinearity
-	NL_LTD =0;	// LTD nonlinearity
-	NL_LTP_Gp = 2.4;
-	NL_LTP_Gn = 2.4;
+	NL_LTD =5.0;	// LTD nonlinearity
+	NL_LTP_Gp = 1.0;
+	NL_LTP_Gn = 0;
 	sigmaDtoD = 0;	// Sigma of device-to-device weight update vairation in gaussian distribution
 	gaussian_dist2 = new std::normal_distribution<double>(0, sigmaDtoD);	// Set up mean and stddev for device-to-device weight update vairation
 	paramALTP = getParamA(NL_LTP + (*gaussian_dist2)(localGen)) * maxNumLevelLTP;	// Parameter A for LTP nonlinearity
@@ -580,6 +580,12 @@ void RealDevice::Write(double deltaWeightNormalized) {
 				xPulseGp = (conductanceGp - minConductance) / (maxConductance - minConductance)*maxNumLevelLTP;
 				conductanceNewGp = (xPulseGp + numPulse) / maxNumLevelLTP * (maxConductance - minConductance) + minConductance;
 			}
+			if (conductanceNewGp > maxConductance) {
+				conductanceNewGp = maxConductance;
+			}
+			else if (conductanceNewGp < minConductance) {
+				conductanceNewGp = minConductance;
+			}
 		}
 		else { //Gn update
 			numPulse = -deltaWeightNormalized * maxNumLevelLTP;
@@ -594,6 +600,12 @@ void RealDevice::Write(double deltaWeightNormalized) {
 			else {
 				xPulseGn = (conductanceGn - minConductance) / (maxConductance - minConductance)*maxNumLevelLTP;
 				conductanceNewGn = (xPulseGn + numPulse) / maxNumLevelLTP * (maxConductance - minConductance) + minConductance;
+			}
+			if (conductanceNewGn > maxConductance) {
+				conductanceNewGn = maxConductance;
+			}
+			else if (conductanceNewGn < minConductance) {
+				conductanceNewGn = minConductance;
 			}
 			/* Gn update  xx Gn은 고정, Gp만 업데이트*/
 			//numPulse = deltaWeightNormalized * maxNumLevelLTP;
@@ -734,24 +746,7 @@ void RealDevice::Erase()
 		double conductancenewGn = minConductance;
 		double conductancenew = conductance;
 
-		extern std::mt19937 gen;
-		if (sigmaCtoC != 0) {
-			conductancenewGp += (*gaussian_dist3)(gen)*sqrt(abs(numPulse));
-			//conductancenewGn += (*gaussian_dist3)(gen)*sqrt(abs(numPulse));
-		}
-		if (conductancenewGp > maxConductance) {
-			conductancenewGp = maxConductance;
-		}
-		else if(conductancenewGp<minConductance)
-		{
-			conductancenewGp = minConductance;
-		}
-		else if (conductancenewGn > maxConductance) {
-			conductancenewGn = maxConductance;
-		}
-		else if (conductancenewGn < minConductance) {
-			conductancenewGn = minConductance;
-		}
+
 		conductanceGpPrev = conductanceGp;
 		conductanceGnPrev = conductanceGn;
 		conductanceGp = conductancenewGp;
@@ -763,7 +758,7 @@ void RealDevice::Erase()
 
 	}
 }
-
+/* Normal Rewrite*/
 void RealDevice::ReWrite(double deltaWeightNormalized)
 {
 	if (deltaWeightNormalized > 0.5){ //Gp update default 0.5

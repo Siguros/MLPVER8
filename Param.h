@@ -85,6 +85,7 @@ public:
 	bool PrintWeightdist;
 	double ActDeviceIH;
 	double ActDeviceHO;
+	bool RandomRefresh;
 };
 
 #endif
