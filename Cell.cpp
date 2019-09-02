@@ -491,7 +491,7 @@ RealDevice::RealDevice(int x, int y) {
 	PCMActivity = 0.3;
 	PCMActivityOn =false;
 	PCMON = true;
-	SaturationPCM = true;
+	SaturationPCM = false;
 	RESETVoltage = 10;
 	RESETPulseWidth = 5e-9;
 	maxRESETLEVEL = 10;
@@ -499,7 +499,7 @@ RealDevice::RealDevice(int x, int y) {
 	NL_LTP =0;	// LTP nonlinearity
 	NL_LTD =5.0;	// LTD nonlinearity
 	NL_LTP_Gp = 1.0;
-	NL_LTP_Gn = 0;
+	NL_LTP_Gn = 1.0;
 	sigmaDtoD = 0;	// Sigma of device-to-device weight update vairation in gaussian distribution
 	gaussian_dist2 = new std::normal_distribution<double>(0, sigmaDtoD);	// Set up mean and stddev for device-to-device weight update vairation
 	paramALTP = getParamA(NL_LTP + (*gaussian_dist2)(localGen)) * maxNumLevelLTP;	// Parameter A for LTP nonlinearity

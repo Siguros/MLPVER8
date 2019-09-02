@@ -755,102 +755,276 @@ void Train(const int numTrain, const int epochs) {
 						if (param->RandomRefresh) { //Refresh random cell			
 							// Line 별 Refresh를 진행
 							/*Read All first Layer*/
-							std::mt19937 Randgen;
-							Randgen.seed(std::time(0));
-							double RandNum = 0;
-							int Ref[param->nHide];
+							if(param->mode == 0){ // Line mode
+								std::mt19937 Randgen;
+								Randgen.seed(std::time(0));
+								double RandNum = 0;
+								int Ref[param->nHide];
+								int count1 = 0;
+								int num1, num2, temp = 0;
+								std::uniform_real_distribution<double> dist(0, 1);
+								std::uniform_int_distribution<int> distIH(0, param->nHide - 1);
+								std::fill_n(Ref, param->nHide, 0);
+								double maxConductance = static_cast<AnalogNVM*>(arrayIH->cell[0][0])->maxConductance;
+								double ResetThr = static_cast<AnalogNVM*>(arrayIH->cell[0][0])->ThrConductance;
+								double sumArrayReadEnergy = 0; // Read Energy를 더할 임시 변수
+								double readVoltage = static_cast<AnalogNVM*>(arrayIH->cell[0][0])->readVoltage;
+								double readPulseWidth = static_cast<AnalogNVM*>(arrayIH->cell[0][0])->readPulseWidth;
+								#pragma omp parallel for reduction(+: sumArrayReadEnergy)
+								for (int j = 0; j < param->nHide; j++) {
+									if (AnalogNVM *temp = dynamic_cast<AnalogNVM*>(arrayIH->cell[0][0])) { //Analog PCM
+										if (static_cast<AnalogNVM*>(arrayIH->cell[0][0])->cmosAccess) { //1T1R
+											sumArrayReadEnergy += arrayIH->wireCapRow*techIH.vdd*techIH.vdd*param->nInput;// All WLs open
+										}
+									}
+									Ref[j] = j;
+								}
+								for (int a = 0; a < param->NumRefHiddenLayer * 30; a++) { //Shuffle 과정
+									num1 = distIH(Randgen);
+									num2 = distIH(Randgen);
+									temp = Ref[num1];
+									Ref[num1] = Ref[num2];
+									Ref[num2] = temp;
+								}
+								for (int k = 0; k < param->nInput; k++) {
+									for (int j = 0; j < param->nHide; j++) {
+										//std::cout << RandNum << std::endl;
+										for (int a = 0; a < param->NumRefHiddenLayer; a++) {
+											if (j == Ref[a]) {
+												static_cast<AnalogNVM*>(arrayIH->cell[j][k])->SaturationPCM = true;
+												count1 += 1;
+											}
+										}
+									}
+
+								}
+								//std::cout << count1 << std::endl;
+								//std::cout << count1 << std :: endl;
+								/*Read Second Layer*/
+								int Ref2[param->nOutput];
+								int count2 = 0;
+								num1, num2, temp = 0;
+								//std::uniform_real_distribution<double> dist(0, 1);
+								std::uniform_int_distribution<int> distIH2(0, param->nOutput - 1);
+								std::fill_n(Ref2, param->nOutput, 0);
+								maxConductance = static_cast<AnalogNVM*>(arrayHO->cell[0][0])->maxConductance;
+								ResetThr = static_cast<AnalogNVM*>(arrayHO->cell[0][0])->ThrConductance;
+								sumArrayReadEnergy = 0; // Read Energy를 더할 임시 변수
+								readVoltage = static_cast<AnalogNVM*>(arrayHO->cell[0][0])->readVoltage;
+								readPulseWidth = static_cast<AnalogNVM*>(arrayHO->cell[0][0])->readPulseWidth;
+#pragma omp parallel for reduction(+: sumArrayReadEnergy)
+								for (int j = 0; j < param->nOutput; j++) {
+									if (AnalogNVM *temp = dynamic_cast<AnalogNVM*>(arrayHO->cell[0][0])) { //Analog PCM
+										if (static_cast<AnalogNVM*>(arrayHO->cell[0][0])->cmosAccess) { //1T1R
+											sumArrayReadEnergy += arrayHO->wireCapRow*techIH.vdd*techIH.vdd*param->nHide;// All WLs open
+										}
+									}
+									Ref2[j] = j;
+								}
+								for (int a = 0; a < param->NumRefOutputLayer * 30; a++) { //Shuffle 과정
+									num1 = distIH2(Randgen);
+									num2 = distIH2(Randgen);
+									temp = Ref2[num1];
+									Ref2[num1] = Ref2[num2];
+									Ref2[num2] = temp;
+								}
+								for (int k = 0; k < param->nHide; k++) {
+									for (int j = 0; j < param->nOutput; j++) {
+										//std::cout << RandNum << std::endl;
+										for (int a = 0; a < param->NumRefOutputLayer; a++) {
+											if (j == Ref2[a]) {
+												static_cast<AnalogNVM*>(arrayHO->cell[j][k])->SaturationPCM = true;
+												//count2+=1;
+											}
+										}
+
+
+
+									}
+
+								}
+								//std::cout << count2 << std::endl;
+								arrayHO->readEnergy += sumArrayReadEnergy;
+								// Don't parallelize this loop since there may be update of member variables inside NeuroSim functions
+								subArrayHO->activityRowRead = 1;
+								subArrayHO->readDynamicEnergy += NeuroSimSubArrayReadEnergy(subArrayHO);
+								subArrayHO->readDynamicEnergy += NeuroSimNeuronReadEnergy(subArrayHO, adderIH, muxIH, muxDecoderIH, dffIH);
+								subArrayHO->readLatency += NeuroSimSubArrayReadLatency(subArrayHO);
+								subArrayHO->readLatency += NeuroSimNeuronReadLatency(subArrayHO, adderIH, muxIH, muxDecoderIH, dffIH);
+							}
+							else if (param->mode == 1) { // Sporadic
+								std::mt19937 Randgen;
+								Randgen.seed(std::time(0));
+								double RandNum = 0;
+								int count1 = 0;
+								std::uniform_real_distribution<double> dist(0, 1);
+								double maxConductance = static_cast<AnalogNVM*>(arrayIH->cell[0][0])->maxConductance;
+								double ResetThr = static_cast<AnalogNVM*>(arrayIH->cell[0][0])->ThrConductance;
+								double sumArrayReadEnergy = 0; // Read Energy를 더할 임시 변수
+								double readVoltage = static_cast<AnalogNVM*>(arrayIH->cell[0][0])->readVoltage;
+								double readPulseWidth = static_cast<AnalogNVM*>(arrayIH->cell[0][0])->readPulseWidth;
+									#pragma omp parallel for reduction(+: sumArrayReadEnergy)
+								for (int j = 0; j < param->nHide; j++) {
+									if (AnalogNVM *temp = dynamic_cast<AnalogNVM*>(arrayIH->cell[0][0])) { //Analog PCM
+										if (static_cast<AnalogNVM*>(arrayIH->cell[0][0])->cmosAccess) { //1T1R
+											sumArrayReadEnergy += arrayIH->wireCapRow*techIH.vdd*techIH.vdd*param->nInput;// All WLs open
+										}
+									}
+									for (int n = 0; n < param->numBitInput; n++) {
+										double pSumMaxAlgorithm = pow(2, n) / (param->numInputLevel - 1)*arrayIH->arrayRowSize; // numInputLevel= 2 (black or white)
+										if (AnalogNVM *temp = dynamic_cast<AnalogNVM*>(arrayIH->cell[0][0])) {
+											double Isum = 0; // weight sum current
+											double IsumMax = 0; //Max weight sum current
+											double inputSum = 0;  // weight sum current of input vector
+											for (int k = 0; k < param->nInput; k++) {
+												RandNum = dist(Randgen);
+												Isum += arrayIH->ReadCell(j, k);
+												if (RandNum > param->ActDeviceIH) {
+													static_cast<AnalogNVM*>(arrayIH->cell[j][k])->SaturationPCM = true;
+												}
+												else {
+													static_cast<AnalogNVM*>(arrayIH->cell[j][k])->SaturationPCM = false;
+												}
+											}
+											sumArrayReadEnergy += Isum * readVoltage*readPulseWidth; //Read energy를 다 더해줌
+										}
+
+									}
+								}
+								arrayIH->readEnergy += sumArrayReadEnergy;
+								// Don't parallelize this loop since there may be update of member variables inside NeuroSim functions
+								subArrayIH->activityRowRead = 1;
+								subArrayIH->readDynamicEnergy += NeuroSimSubArrayReadEnergy(subArrayIH);
+								subArrayIH->readDynamicEnergy += NeuroSimNeuronReadEnergy(subArrayIH, adderIH, muxIH, muxDecoderIH, dffIH);
+								subArrayIH->readLatency += NeuroSimSubArrayReadLatency(subArrayIH);
+								subArrayIH->readLatency += NeuroSimNeuronReadLatency(subArrayIH, adderIH, muxIH, muxDecoderIH, dffIH);
+
+								/*Read All Second Layer*/
+								maxConductance = static_cast<AnalogNVM*>(arrayHO->cell[0][0])->maxConductance;
+								ResetThr = static_cast<AnalogNVM*>(arrayHO->cell[0][0])->ThrConductance;
+								sumArrayReadEnergy = 0; // Read Energy를 더할 임시 변수
+								readVoltage = static_cast<AnalogNVM*>(arrayHO->cell[0][0])->readVoltage;
+								readPulseWidth = static_cast<AnalogNVM*>(arrayHO->cell[0][0])->readPulseWidth;
+#pragma omp parallel for reduction(+: sumArrayReadEnergy)
+								for (int j = 0; j < param->nOutput; j++) {
+									if (AnalogNVM *temp = dynamic_cast<AnalogNVM*>(arrayHO->cell[0][0])) { //Analog PCM
+										if (static_cast<AnalogNVM*>(arrayHO->cell[0][0])->cmosAccess) { //1T1R
+											sumArrayReadEnergy += arrayHO->wireCapRow*techIH.vdd*techIH.vdd*param->nInput;// All WLs open
+										}
+									}
+									for (int n = 0; n < param->numBitInput; n++) {
+										double pSumMaxAlgorithm = pow(2, n) / (param->numInputLevel - 1)*(arrayHO->arrayRowSize); // numInputLevel= 2 (black or white)
+										if (AnalogNVM *temp = dynamic_cast<AnalogNVM*>(arrayHO->cell[0][0])) {
+											RandNum = dist(Randgen);
+											double Isum = 0; // weight sum current
+											double IsumMax = 0; //Max weight sum current
+											double inputSum = 0;  // weight sum current of input vector
+											for (int k = 0; k < param->nHide; k++) {
+												//std::cout << RandNum
+												Isum += arrayHO->ReadCell(j, k);
+												if (RandNum > param->ActDeviceHO) {
+													static_cast<AnalogNVM*>(arrayHO->cell[j][k])->SaturationPCM = true;
+												}
+												else {
+													static_cast<AnalogNVM*>(arrayHO->cell[j][k])->SaturationPCM = false;
+												}
+												/*	else
+													{
+														static_cast<AnalogNVM*>(arrayHO->cell[j][k])->SaturationPCM = false;
+
+													}*/
+											}
+											sumArrayReadEnergy += Isum * readVoltage*readPulseWidth;
+										}
+
+									}
+								}
+								arrayHO->readEnergy += sumArrayReadEnergy;
+								// Don't parallelize this loop since there may be update of member variables inside NeuroSim functions
+								subArrayHO->activityRowRead = 1;
+								subArrayHO->readDynamicEnergy += NeuroSimSubArrayReadEnergy(subArrayIH);
+								subArrayHO->readDynamicEnergy += NeuroSimNeuronReadEnergy(subArrayIH, adderIH, muxIH, muxDecoderIH, dffIH);
+								subArrayHO->readLatency += NeuroSimSubArrayReadLatency(subArrayIH);
+								subArrayHO->readLatency += NeuroSimNeuronReadLatency(subArrayIH, adderIH, muxIH, muxDecoderIH, dffIH);
+							}
+							else if (param->mode == 2) { // Sequential
 							int count1 = 0;
-							int num1, num2, temp = 0;
-							std::uniform_real_distribution<double> dist(0, 1);
-							std::uniform_int_distribution<int> distIH(0, param->nHide - 1);
-							std::fill_n(Ref, param->nHide, 0);
+							int batchNum = (batchSize + 1) / param->numImageperRESET;
 							double maxConductance = static_cast<AnalogNVM*>(arrayIH->cell[0][0])->maxConductance;
 							double ResetThr = static_cast<AnalogNVM*>(arrayIH->cell[0][0])->ThrConductance;
 							double sumArrayReadEnergy = 0; // Read Energy를 더할 임시 변수
 							double readVoltage = static_cast<AnalogNVM*>(arrayIH->cell[0][0])->readVoltage;
 							double readPulseWidth = static_cast<AnalogNVM*>(arrayIH->cell[0][0])->readPulseWidth;
-#pragma omp parallel for reduction(+: sumArrayReadEnergy)
+							int RefStart;
+							int RefEnd;
+						
+							int RefLayer[param->NumRefHiddenLayer];
+							std::fill_n(RefLayer, param->NumRefHiddenLayer, 0);
+							RefStart = (batchNum*param->NumRefHiddenLayer);
+							//std::cout << RefStart << std::endl;
+							RefEnd = ((batchSize + 1)*param->NumRefHiddenLayer);
+							for (int i = 0; i < param->NumRefHiddenLayer; i++) {
+								RefLayer[i] = (RefStart + i)%param->nHide;
+								//std::cout << RefLayer[i] << std::endl;
+							}
+								#pragma omp parallel for reduction(+: sumArrayReadEnergy)
 							for (int j = 0; j < param->nHide; j++) {
 								if (AnalogNVM *temp = dynamic_cast<AnalogNVM*>(arrayIH->cell[0][0])) { //Analog PCM
 									if (static_cast<AnalogNVM*>(arrayIH->cell[0][0])->cmosAccess) { //1T1R
 										sumArrayReadEnergy += arrayIH->wireCapRow*techIH.vdd*techIH.vdd*param->nInput;// All WLs open
 									}
 								}
-								Ref[j] = j;
-							}
-							for (int a = 0; a < param->NumRefHiddenLayer * 30; a++) { //Shuffle 과정
-								num1 = distIH(Randgen);
-								num2 = distIH(Randgen);
-								temp = Ref[num1];
-								Ref[num1] = Ref[num2];
-								Ref[num2] = temp;
 							}
 							for (int k = 0; k < param->nInput; k++) {
 								for (int j = 0; j < param->nHide; j++) {
 									//std::cout << RandNum << std::endl;
 									for (int a = 0; a < param->NumRefHiddenLayer; a++) {
-										if (j == Ref[a]) {
+										if (j == RefLayer[a]) {
+										
 											static_cast<AnalogNVM*>(arrayIH->cell[j][k])->SaturationPCM = true;
-											count1 += 1;
-										}
-										else {
-											static_cast<AnalogNVM*>(arrayIH->cell[j][k])->SaturationPCM = false;
+											//count1 += 1;
+											//std::cout << j<<std::endl;
 										}
 									}
-
-
 
 								}
 
 							}
+							//std::cout << count1 << std::endl;
 							//std::cout << count1 << std :: endl;
 							/*Read Second Layer*/
-							int Ref2[param->nOutput];
-							int count2 = 0;
-							num1, num2, temp = 0;
-							//std::uniform_real_distribution<double> dist(0, 1);
-							std::uniform_int_distribution<int> distIH2(0, param->nOutput - 1);
-							std::fill_n(Ref2, param->nOutput, 0);
-							maxConductance = static_cast<AnalogNVM*>(arrayHO->cell[0][0])->maxConductance;
-							ResetThr = static_cast<AnalogNVM*>(arrayHO->cell[0][0])->ThrConductance;
-							sumArrayReadEnergy = 0; // Read Energy를 더할 임시 변수
-							readVoltage = static_cast<AnalogNVM*>(arrayHO->cell[0][0])->readVoltage;
-							readPulseWidth = static_cast<AnalogNVM*>(arrayHO->cell[0][0])->readPulseWidth;
-#pragma omp parallel for reduction(+: sumArrayReadEnergy)
-							for (int j = 0; j < param->nOutput; j++) {
-								if (AnalogNVM *temp = dynamic_cast<AnalogNVM*>(arrayHO->cell[0][0])) { //Analog PCM
-									if (static_cast<AnalogNVM*>(arrayHO->cell[0][0])->cmosAccess) { //1T1R
-										sumArrayReadEnergy += arrayHO->wireCapRow*techIH.vdd*techIH.vdd*param->nHide;// All WLs open
+							RefStart;
+							RefEnd;
+							int RefLayer2[param->NumRefOutputLayer];
+						
+							std::fill_n(RefLayer2, param->NumRefOutputLayer, 0);
+							RefStart = (batchNum*param->NumRefOutputLayer);
+							RefEnd = ((batchSize + 1)*param->NumRefOutputLayer);
+							for (int i = 0; i < param->NumRefOutputLayer; i++) {
+								RefLayer2[i] = (RefStart + i) % param->nOutput;
+							}
+							#pragma omp parallel for reduction(+: sumArrayReadEnergy)
+							for (int j = 0; j < param->nHide; j++) {
+								if (AnalogNVM *temp = dynamic_cast<AnalogNVM*>(arrayIH->cell[0][0])) { //Analog PCM
+									if (static_cast<AnalogNVM*>(arrayIH->cell[0][0])->cmosAccess) { //1T1R
+										sumArrayReadEnergy += arrayIH->wireCapRow*techIH.vdd*techIH.vdd*param->nInput;// All WLs open
 									}
 								}
-								Ref2[j] = j;
-							}
-							for (int a = 0; a < param->NumRefOutputLayer * 30; a++) { //Shuffle 과정
-								num1 = distIH2(Randgen);
-								num2 = distIH2(Randgen);
-								temp = Ref2[num1];
-								Ref2[num1] = Ref2[num2];
-								Ref2[num2] = temp;
 							}
 							for (int k = 0; k < param->nHide; k++) {
 								for (int j = 0; j < param->nOutput; j++) {
 									//std::cout << RandNum << std::endl;
+
 									for (int a = 0; a < param->NumRefOutputLayer; a++) {
-										if (j == Ref2[a]) {
+										if (j == RefLayer2[a]) {
+											
 											static_cast<AnalogNVM*>(arrayHO->cell[j][k])->SaturationPCM = true;
-											count2 += 1;
-										}
-										else {
-											static_cast<AnalogNVM*>(arrayHO->cell[j][k])->SaturationPCM = false;
 										}
 									}
 
-
-
 								}
-
 							}
-							//std::cout << count2 << std::endl;
+							
 							arrayHO->readEnergy += sumArrayReadEnergy;
 							// Don't parallelize this loop since there may be update of member variables inside NeuroSim functions
 							subArrayHO->activityRowRead = 1;
@@ -858,6 +1032,7 @@ void Train(const int numTrain, const int epochs) {
 							subArrayHO->readDynamicEnergy += NeuroSimNeuronReadEnergy(subArrayHO, adderIH, muxIH, muxDecoderIH, dffIH);
 							subArrayHO->readLatency += NeuroSimSubArrayReadLatency(subArrayHO);
 							subArrayHO->readLatency += NeuroSimNeuronReadLatency(subArrayHO, adderIH, muxIH, muxDecoderIH, dffIH);
+							}
 
 							/*ERASE Opeartion*/
 							/*==================Erase First Layer===================*/
@@ -867,7 +1042,8 @@ void Train(const int numTrain, const int epochs) {
 							double numWriteOperation = 0;
 							double RESETVoltage = static_cast<AnalogNVM*>(arrayIH->cell[0][0])->RESETVoltage;
 							double RESETPulseWidth = static_cast<AnalogNVM*>(arrayIH->cell[0][0])->RESETPulseWidth;
-#pragma omp parallel for reduction(+:sumArrayWriteEnergy,sumNeuroSimWriteEnergy,sumWriteLatencyAnalogPCM)
+							int count4 = 0;
+							#pragma omp parallel for reduction(+:sumArrayWriteEnergy,sumNeuroSimWriteEnergy,sumWriteLatencyAnalogPCM)
 							for (int k = 0; k < param->nInput; k++) {
 								int numWriteOperationPerRow = 0;
 								int numWriteCellPerOperation = 0;
@@ -875,6 +1051,7 @@ void Train(const int numTrain, const int epochs) {
 								for (int j = 0; j < param->nHide; j++) {
 									if (static_cast<AnalogNVM*>(arrayIH->cell[j][k])->SaturationPCM) { //SET Saturation 된 경우 RESET operation을 진행
 										arrayIH->EraseCell(j, k, param->maxWeight, param->minWeight);
+										//count4 += 1;
 										numWriteCellPerOperation += 1;
 										if (static_cast<AnalogNVM*>(arrayIH->cell[j][k])->writeLatencyLTP > maxLatencyLTP) {
 											maxLatencyLTP = static_cast<AnalogNVM*>(arrayIH->cell[j][k])->writeLatencyLTP;
@@ -909,6 +1086,7 @@ void Train(const int numTrain, const int epochs) {
 									}
 									/*Half selected Cell*/
 									else { //Saturation이 안된경우는 그냥 남아있음.
+										count4 += 1;
 										if (AnalogNVM *temp = dynamic_cast<AnalogNVM*>(arrayIH->cell[0][0])) {  // Analog eNVM
 											if (!static_cast<eNVM*>(arrayIH->cell[0][0])->cmosAccess && param->writeEnergyReport) { // Cross-point
 												sumArrayWriteEnergy += (RESETVoltage / 2 * RESETVoltage / 2 * static_cast<AnalogNVM*>(arrayIH->cell[j][k])->conductance * maxLatencyLTP + RESETVoltage / 2 * RESETVoltage / 2 * static_cast<AnalogNVM*>(arrayIH->cell[j][k])->conductance * maxLatencyLTP);
@@ -917,7 +1095,7 @@ void Train(const int numTrain, const int epochs) {
 									}
 								}
 							}
-
+							//std::cout << count4 << std::endl;
 							/* Calculate the average number of write pulses on the selected row */
 				//		#pragma omp critical    // Use critical here since NeuroSim class functions may update its member variables 문제가능성 큼
 				//	{
@@ -946,10 +1124,11 @@ void Train(const int numTrain, const int epochs) {
 							numWriteOperation = 0;
 							RESETVoltage = static_cast<AnalogNVM*>(arrayHO->cell[0][0])->RESETVoltage;
 							RESETPulseWidth = static_cast<AnalogNVM*>(arrayHO->cell[0][0])->RESETPulseWidth;
+							int count3 = 0;
 							/*double Gp = 0;
 							double Gn = 0;*/
-#pragma omp parallel for reduction(+:sumArrayWriteEnergy,sumNeuroSimWriteEnergy,sumWriteLatencyAnalogPCM)
-							//int expc = 0;
+							#pragma omp parallel for reduction(+:sumArrayWriteEnergy,sumNeuroSimWriteEnergy,sumWriteLatencyAnalogPCM)
+						
 							for (int k = 0; k < param->nHide; k++) {
 								int numWriteOperationPerRow = 0;
 								int numWriteCellPerOperation = 0;
@@ -958,7 +1137,7 @@ void Train(const int numTrain, const int epochs) {
 								for (int j = 0; j < param->nOutput; j++) {
 
 									if (static_cast<AnalogNVM*>(arrayHO->cell[j][k])->SaturationPCM) { //SET Saturation 된 경우 RESET operation을 진행
-										//expc += 1;
+										count3 += 1;
 										arrayHO->EraseCell(j, k, param->maxWeight, param->minWeight);
 										/*double Gp = static_cast<AnalogNVM*>(arrayHO->cell[j][k])->conductanceGp;
 										double Gn = static_cast<AnalogNVM*>(arrayHO->cell[j][k])->conductanceGn;
@@ -1007,6 +1186,7 @@ void Train(const int numTrain, const int epochs) {
 								}
 
 							}
+							//std::cout <<count3 << std::endl;
 							/*if (expc == 1000) {
 								std::cout << batchSize << std::endl;
 							}*/
@@ -1050,7 +1230,7 @@ void Train(const int numTrain, const int epochs) {
 									if (static_cast<AnalogNVM*>(arrayIH->cell[j][k])->SaturationPCM) { //SET Saturation 된 경우 RESET operation을 진행
 										double conductancePrevGp = static_cast<AnalogNVM*>(arrayIH->cell[0][0])->conductanceGpPrev;
 										double conductancePrevGn = static_cast<AnalogNVM*>(arrayIH->cell[0][0])->conductanceGnPrev;
-
+										static_cast<AnalogNVM*>(arrayIH->cell[j][k])->SaturationPCM = false;
 										//ERAESE시 weight 값 0.5
 										/*std::cout << "w: " << weightGp;*/
 										arrayIH->WriteCell(j, k, weight1[j][k] - 0.5, param->maxWeight, param->minWeight, false);
@@ -1145,7 +1325,7 @@ void Train(const int numTrain, const int epochs) {
 									if (static_cast<AnalogNVM*>(arrayHO->cell[j][k])->SaturationPCM) { //SET Saturation 된 경우 RESET operation을 진행
 										double conductancePrevGp = static_cast<AnalogNVM*>(arrayHO->cell[0][0])->conductanceGpPrev;
 										double conductancePrevGn = static_cast<AnalogNVM*>(arrayHO->cell[0][0])->conductanceGnPrev;
-
+										static_cast<AnalogNVM*>(arrayHO->cell[j][k])->SaturationPCM = false;
 										arrayHO->WriteCell(j, k, weight2[j][k] - 0.5, param->maxWeight, param->minWeight, false);
 										//arrayHO->ReWriteCell(j, k, weight2[j][k], param->maxWeight, param->minWeight); // regular true: weight update 사용, false: 비례하여 update 
 										//weight2[j][k] = arrayHO->ConductanceToWeight(j, k, param->maxWeight, param->minWeight);
@@ -1246,7 +1426,7 @@ void Train(const int numTrain, const int epochs) {
 												static_cast<AnalogNVM*>(arrayIH->cell[j][k])->SaturationPCM = true;
 											}
 											else {
-												static_cast<AnalogNVM*>(arrayIH->cell[j][k])->SaturationPCM = false;
+												static_cast<AnalogNVM*>(arrayIH->cell[j][k])->SaturationPCM = true;
 											}
 										}
 										sumArrayReadEnergy += Isum * readVoltage*readPulseWidth; //Read energy를 다 더해줌
@@ -1291,7 +1471,7 @@ void Train(const int numTrain, const int epochs) {
 												static_cast<AnalogNVM*>(arrayHO->cell[j][k])->SaturationPCM = true;
 											}
 											else {
-												static_cast<AnalogNVM*>(arrayHO->cell[j][k])->SaturationPCM = false;
+												static_cast<AnalogNVM*>(arrayHO->cell[j][k])->SaturationPCM = true;
 											}
 											/*	else
 												{

@@ -88,6 +88,12 @@ public:
 	bool RandomRefresh;
 	int NumRefHiddenLayer; //Refersh 할 Devices 개수를 지정 IH단계
 	int NumRefOutputLayer; //Refersh할 Devices 개수를 지정 HO 단계
+	enum RandomType {
+		Line,
+		Sporadic,
+		Sequential
+	};
+	RandomType mode;
 };
 
 #endif

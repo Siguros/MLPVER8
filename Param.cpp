@@ -45,8 +45,8 @@ Param::Param() {
 	numMnistTestImages = 10000;	// # of testing images in MNIST
 	
 	/* Algorithm parameters */
-	numTrainImagesPerEpoch = 1000;	// # of training images per epoch
-	totalNumEpochs = 20;	// Total number of epochs
+	numTrainImagesPerEpoch = 8000;	// # of training images per epoch
+	totalNumEpochs = 125;	// Total number of epochs
 	interNumEpochs = 1;		// Internal number of epochs (print out the results every interNumEpochs)
 	nInput = 400;     // # of neurons in input layer
 	nHide = 100;      // # of neurons in hidden layer
@@ -78,12 +78,13 @@ Param::Param() {
 	processNode = 14;	// Technology node (nm)
 	clkFreq = 2e9;		// Clock frequency (Hz)
 
-	numImageperRESET = 10;
+	numImageperRESET = 100;
 	PrintWeightdist = false;
 	ActDeviceIH = 0.7;
-	ActDeviceHO = 0;
+	ActDeviceHO = 0.7;
 	RandomRefresh = true;
-	NumRefHiddenLayer = 100;
-	NumRefOutputLayer = 10;
+	NumRefHiddenLayer = 50;
+	NumRefOutputLayer = 5;
+	mode =Sequential; // Randome Refresh mode Line, Sporadic, Sequential ( Line : 랜덤 라인 진행, Sporadic: 산발적으로 랜덤 진행, Sequential : 연속적 랜덤 진행)
 }
 
