@@ -80,11 +80,11 @@ Param::Param() {
 
 	numImageperRESET = 100;
 	PrintWeightdist = false;
-	ActDeviceIH = 0.7;
-	ActDeviceHO = 0.7;
-	RandomRefresh = true;
-	NumRefHiddenLayer = 50;
-	NumRefOutputLayer = 5;
-	mode =Sequential; // Randome Refresh mode Line, Sporadic, Sequential ( Line : 랜덤 라인 진행, Sporadic: 산발적으로 랜덤 진행, Sequential : 연속적 랜덤 진행)
+	ActDeviceIH = 0.2;
+	ActDeviceHO = 0.2;
+	RandomRefresh = false;
+	NumRefHiddenLayer =50;
+	NumRefOutputLayer =5;
+	mode =Line; // Randome Refresh mode Line, Sporadic, Sequential ( Line : 랜덤 라인 진행, Sporadic: 산발적으로 랜덤 진행, Sequential : 연속적 랜덤 진행)
 }
 

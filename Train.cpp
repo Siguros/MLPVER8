@@ -1,4 +1,3 @@
-
 /*******************************************************************************
 * Copyright (c) 2015-2017
 * School of Electrical, Computer and Energy Engineering, Arizona State University
@@ -779,7 +778,7 @@ void Train(const int numTrain, const int epochs) {
 									}
 									Ref[j] = j;
 								}
-								for (int a = 0; a < param->NumRefHiddenLayer * 30; a++) { //Shuffle 과정
+								for (int a = 0; a < param->NumRefHiddenLayer * 100; a++) { //Shuffle 과정
 									num1 = distIH(Randgen);
 									num2 = distIH(Randgen);
 									temp = Ref[num1];
@@ -792,7 +791,7 @@ void Train(const int numTrain, const int epochs) {
 										for (int a = 0; a < param->NumRefHiddenLayer; a++) {
 											if (j == Ref[a]) {
 												static_cast<AnalogNVM*>(arrayIH->cell[j][k])->SaturationPCM = true;
-												count1 += 1;
+											
 											}
 										}
 									}
@@ -821,7 +820,7 @@ void Train(const int numTrain, const int epochs) {
 									}
 									Ref2[j] = j;
 								}
-								for (int a = 0; a < param->NumRefOutputLayer * 30; a++) { //Shuffle 과정
+								for (int a = 0; a < param->NumRefOutputLayer * 100; a++) { //Shuffle 과정
 									num1 = distIH2(Randgen);
 									num2 = distIH2(Randgen);
 									temp = Ref2[num1];
@@ -879,7 +878,7 @@ void Train(const int numTrain, const int epochs) {
 											for (int k = 0; k < param->nInput; k++) {
 												RandNum = dist(Randgen);
 												Isum += arrayIH->ReadCell(j, k);
-												if (RandNum > param->ActDeviceIH) {
+												if (RandNum < param->ActDeviceIH) {
 													static_cast<AnalogNVM*>(arrayIH->cell[j][k])->SaturationPCM = true;
 												}
 												else {
@@ -922,7 +921,7 @@ void Train(const int numTrain, const int epochs) {
 											for (int k = 0; k < param->nHide; k++) {
 												//std::cout << RandNum
 												Isum += arrayHO->ReadCell(j, k);
-												if (RandNum > param->ActDeviceHO) {
+												if (RandNum < param->ActDeviceHO) {
 													static_cast<AnalogNVM*>(arrayHO->cell[j][k])->SaturationPCM = true;
 												}
 												else {
@@ -1426,7 +1425,7 @@ void Train(const int numTrain, const int epochs) {
 												static_cast<AnalogNVM*>(arrayIH->cell[j][k])->SaturationPCM = true;
 											}
 											else {
-												static_cast<AnalogNVM*>(arrayIH->cell[j][k])->SaturationPCM = true;
+												static_cast<AnalogNVM*>(arrayIH->cell[j][k])->SaturationPCM = false;
 											}
 										}
 										sumArrayReadEnergy += Isum * readVoltage*readPulseWidth; //Read energy를 다 더해줌
